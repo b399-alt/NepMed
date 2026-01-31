@@ -8,9 +8,9 @@ import 'screens/onboarding/onboarding_screen1.dart';
 import 'screens/onboarding/onboarding_screen2.dart';
 import 'screens/onboarding/onboarding_screen3.dart';
 
-// Auth
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/register_screen.dart';
+// Auth - Clean Architecture
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/register_page.dart';
 
 // Main Navigation
 import 'main_navigation.dart';
@@ -20,7 +20,7 @@ final Map<String, WidgetBuilder> appRoutes = {
   '/onboard1': (context) => const OnboardingScreen1(),
   '/onboard2': (context) => const OnboardingScreen2(),
   '/onboard3': (context) => const OnboardingScreen3(),
-  '/login': (context) => const LoginScreen(),
-  '/register': (context) => const RegisterScreen(),
+  '/login': (context) => const LoginPage(),
+  '/register': (context) => const RegisterPage(),
   '/main': (context) => const MainNavigation(),
 };
