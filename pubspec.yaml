@@ -57,6 +57,9 @@ dependencies:
   # HTTP Client for API calls
   dio: ^5.4.0
 
+  # Sensors (shake detection, step counter, gyroscope)
+  sensors_plus: ^6.1.1
+
   # Image Picker
   image_picker: ^1.0.7
 

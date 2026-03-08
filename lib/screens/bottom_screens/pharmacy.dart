@@ -1,584 +1,196 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../features/cart/presentation/pages/cart_page.dart';
+import '../../features/cart/presentation/providers/cart_provider.dart';
+import '../../features/medicine/domain/entities/medicine_entity.dart';
+import '../../features/medicine/presentation/pages/add_edit_medicine_page.dart';
+import '../../features/medicine/presentation/providers/medicine_provider.dart';
 
 class PharmacyScreen extends StatefulWidget {
   const PharmacyScreen({super.key});
-
   @override
   State<PharmacyScreen> createState() => _PharmacyState();
 }
 
 class _PharmacyState extends State<PharmacyScreen> {
-  String _selectedPlan = 'weekly';
-  int _selectedMedicineIndex = -1;
+  final _searchCtrl = TextEditingController();
+  String _selectedCategory = 'All';
 
-  final List<Map<String, dynamic>> _medicines = [
-    {
-      'name': 'Paracetamol 500mg',
-      'description': 'Pain relief & fever',
-      'price': 50,
-      'icon': Icons.medication,
-      'color': Color(0xFF4CAF50),
-    },
-    {
-      'name': 'Vitamin D3',
-      'description': 'Bone health supplement',
-      'price': 299,
-      'icon': Icons.wb_sunny,
-      'color': Color(0xFFFF9800),
-    },
-    {
-      'name': 'Omeprazole 20mg',
-      'description': 'Acidity & heartburn',
-      'price': 120,
-      'icon': Icons.local_pharmacy,
-      'color': Color(0xFF2196F3),
-    },
-    {
-      'name': 'Metformin 500mg',
-      'description': 'Diabetes management',
-      'price': 85,
-      'icon': Icons.bloodtype,
-      'color': Color(0xFFE91E63),
-    },
-    {
-      'name': 'Amlodipine 5mg',
-      'description': 'Blood pressure control',
-      'price': 95,
-      'icon': Icons.favorite,
-      'color': Color(0xFFF44336),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) =>
+        context.read<MedicineProvider>().loadMedicines());
+  }
 
-  final Map<String, Map<String, dynamic>> _plans = {
-    'weekly': {
-      'title': '1 Week',
-      'subtitle': '7 days supply',
-      'discount': 5,
-      'icon': Icons.calendar_view_week,
-    },
-    'monthly': {
-      'title': '1 Month',
-      'subtitle': '30 days supply',
-      'discount': 15,
-      'icon': Icons.calendar_month,
-    },
-    'custom': {
-      'title': 'Custom',
-      'subtitle': 'Choose your date',
-      'discount': 0,
-      'icon': Icons.edit_calendar,
-    },
-  };
+  @override
+  void dispose() { _searchCtrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Pharmacy Subscription',
-          style: TextStyle(
-            color: Color(0xFF1E293B),
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.shopping_cart_outlined,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Banner
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2196F3).withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
+    final cart = context.watch<CartProvider>();
+    return Consumer<MedicineProvider>(
+      builder: (context, provider, _) {
+        final cats = ['All', ...provider.categories];
+        final medicines = _selectedCategory == 'All'
+            ? provider.displayList
+            : provider.displayList.where((m) => m.category == _selectedCategory).toList();
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
+          appBar: AppBar(
+            backgroundColor: Colors.white, elevation: 0,
+            title: const Text('Pharmacy', style: TextStyle(color: Color(0xFF1E293B), fontSize: 20, fontWeight: FontWeight.bold)),
+            centerTitle: true,
+            actions: [
+              Stack(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            '🎉 Save up to 15%',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Subscribe & Save',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Get regular medicine delivery\nat your doorstep',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, color: Color(0xFF64748B)),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage())),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.local_shipping,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
+                  if (cart.itemCount > 0)
+                    Positioned(right: 6, top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                        child: Text(cart.itemCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      )),
                 ],
               ),
-            ),
-
-            // Subscription Plans
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Choose Delivery Plan',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Plan Cards
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: _plans.entries.map((entry) {
-                  final isSelected = _selectedPlan == entry.key;
-                  final plan = entry.value;
-
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedPlan = entry.key;
-                        });
-                        if (entry.key == 'custom') {
-                          _showCustomDatePicker();
-                        }
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(
-                          right: entry.key != 'custom' ? 10 : 0,
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF2196F3)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF2196F3)
-                                : const Color(0xFFE2E8F0),
-                            width: 2,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                            BoxShadow(
-                              color: const Color(0xFF2196F3)
-                                  .withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                              : null,
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              plan['icon'] as IconData,
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF64748B),
-                              size: 28,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              plan['title'] as String,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : const Color(0xFF1E293B),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              plan['subtitle'] as String,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white70
-                                    : const Color(0xFF94A3B8),
-                                fontSize: 11,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            if ((plan['discount'] as int) > 0) ...[
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.white.withOpacity(0.2)
-                                      : const Color(0xFFE8F5E9),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${plan['discount']}% OFF',
-                                  style: TextStyle(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : const Color(0xFF4CAF50),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Select Medicine
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Select Medicine',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Medicine List
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _medicines.length,
-              itemBuilder: (context, index) {
-                final medicine = _medicines[index];
-                final isSelected = _selectedMedicineIndex == index;
-                final discount = _plans[_selectedPlan]!['discount'] as int;
-                final originalPrice = medicine['price'] as int;
-                final discountedPrice =
-                    originalPrice - (originalPrice * discount ~/ 100);
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedMedicineIndex = index;
-                    });
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF2196F3)
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: (medicine['color'] as Color).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            medicine['icon'] as IconData,
-                            color: medicine['color'] as Color,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                medicine['name'] as String,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                  color: Color(0xFF1E293B),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                medicine['description'] as String,
-                                style: const TextStyle(
-                                  color: Color(0xFF94A3B8),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            if (discount > 0)
-                              Text(
-                                '₹$originalPrice',
-                                style: const TextStyle(
-                                  color: Color(0xFF94A3B8),
-                                  fontSize: 12,
-                                  decoration: TextDecoration.lineThrough,
-                                ),
-                              ),
-                            Text(
-                              '₹$discountedPrice',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Color(0xFF2196F3),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xFF2196F3)
-                                : const Color(0xFFF1F5F9),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isSelected ? Icons.check : Icons.add,
-                            color: isSelected
-                                ? Colors.white
-                                : const Color(0xFF64748B),
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Benefits Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F9FF),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFBAE6FD),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.verified,
-                          color: Color(0xFF2196F3),
-                          size: 24,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Subscription Benefits',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildBenefitItem(Icons.local_shipping, 'Free delivery on all orders'),
-                    _buildBenefitItem(Icons.discount, 'Extra discounts on subscription'),
-                    _buildBenefitItem(Icons.schedule, 'Never miss your medicines'),
-                    _buildBenefitItem(Icons.cancel, 'Cancel anytime, no questions'),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
-      bottomSheet: _selectedMedicineIndex >= 0
-          ? Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      '₹${_calculateTotal()}/${_selectedPlan == 'weekly' ? 'week' : _selectedPlan == 'monthly' ? 'month' : 'delivery'}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _showSubscriptionConfirmation();
+              IconButton(
+                icon: const Icon(Icons.add, color: Color(0xFF2196F3)),
+                tooltip: 'Add Medicine',
+                onPressed: () async {
+                  final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditMedicinePage()));
+                  if (result == true) provider.loadMedicines();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2196F3),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Subscribe Now',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
               ),
             ],
           ),
-        ),
-      )
-          : null,
+          body: provider.isLoading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF2196F3)))
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        onChanged: (q) { provider.search(q); setState(() {}); },
+                        decoration: InputDecoration(
+                          hintText: 'Search medicines...',
+                          prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
+                          suffixIcon: _searchCtrl.text.isNotEmpty
+                              ? IconButton(icon: const Icon(Icons.clear), onPressed: () { _searchCtrl.clear(); provider.clearSearch(); setState(() {}); })
+                              : null,
+                          filled: true, fillColor: Colors.white,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    if (!provider.isSearching)
+                      SizedBox(
+                        height: 48,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: cats.length,
+                          itemBuilder: (_, i) {
+                            final cat = cats[i];
+                            final sel = _selectedCategory == cat;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedCategory = cat),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: sel ? const Color(0xFF2196F3) : Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: sel ? const Color(0xFF2196F3) : const Color(0xFFE2E8F0)),
+                                ),
+                                child: Text(cat, style: TextStyle(color: sel ? Colors.white : const Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: medicines.isEmpty
+                          ? const Center(child: Text('No medicines found', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16)))
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: medicines.length,
+                              itemBuilder: (_, i) => _medicineCard(context, medicines[i], cart, provider),
+                            ),
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 
-  Widget _buildBenefitItem(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+  Widget _medicineCard(BuildContext context, MedicineEntity med, CartProvider cart, MedicineProvider provider) {
+    final inCart = cart.isInCart(med.id);
+    final qty = cart.quantityOf(med.id);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        border: inCart ? Border.all(color: const Color(0xFF2196F3), width: 2) : null,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: const Color(0xFF4CAF50),
-            size: 20,
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: const Color(0xFFE3F2FD), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.medication, color: Color(0xFF2196F3), size: 28),
           ),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 14,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Expanded(child: Text(med.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF1E293B)))),
+                  if (!med.inStock) Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                    child: const Text('Out of Stock', style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold))),
+                ]),
+                const SizedBox(height: 2),
+                Text(med.category, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                Text(med.dosage, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('\u20b9' + med.price.toStringAsFixed(0), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2196F3))),
+                    Row(children: [
+                      _editBtn(context, med, provider),
+                      const SizedBox(width: 6),
+                      _deleteBtn(context, med, provider),
+                      const SizedBox(width: 6),
+                      if (med.inStock)
+                        inCart
+                            ? Row(children: [
+                                _qtyBtn(Icons.remove, () => cart.removeMedicine(med.id), Colors.red),
+                                Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text(qty.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+                                _qtyBtn(Icons.add, () => cart.addMedicine(med), const Color(0xFF2196F3)),
+                              ])
+                            : GestureDetector(
+                                onTap: () { cart.addMedicine(med); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(med.name + ' added'), backgroundColor: const Color(0xFF4CAF50), behavior: SnackBarBehavior.floating, duration: const Duration(seconds: 1))); },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(color: const Color(0xFF2196F3), borderRadius: BorderRadius.circular(8)),
+                                  child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.add, color: Colors.white, size: 16), SizedBox(width: 4), Text('Add', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13))]))),
+                    ]),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -586,178 +198,39 @@ class _PharmacyState extends State<PharmacyScreen> {
     );
   }
 
-  int _calculateTotal() {
-    if (_selectedMedicineIndex < 0) return 0;
-    final medicine = _medicines[_selectedMedicineIndex];
-    final discount = _plans[_selectedPlan]!['discount'] as int;
-    final originalPrice = medicine['price'] as int;
-    return originalPrice - (originalPrice * discount ~/ 100);
-  }
+  Widget _qtyBtn(IconData icon, VoidCallback onTap, Color color) => GestureDetector(
+    onTap: onTap,
+    child: Container(padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: Icon(icon, size: 16, color: color)),
+  );
 
-  void _showCustomDatePicker() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF2196F3),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
+  Widget _editBtn(BuildContext ctx, MedicineEntity med, MedicineProvider provider) => GestureDetector(
+    onTap: () async {
+      final result = await Navigator.push(ctx, MaterialPageRoute(builder: (_) => AddEditMedicinePage(medicine: med)));
+      if (result == true) provider.loadMedicines();
+    },
+    child: Container(padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: const Icon(Icons.edit, size: 16, color: Colors.orange)),
+  );
 
-    if (picked != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Delivery scheduled for ${picked.day}/${picked.month}/${picked.year}',
-          ),
-          backgroundColor: const Color(0xFF2196F3),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-    }
-  }
+  Widget _deleteBtn(BuildContext ctx, MedicineEntity med, MedicineProvider provider) => GestureDetector(
+    onTap: () => _confirmDelete(ctx, med, provider),
+    child: Container(padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: const Icon(Icons.delete_outline, size: 16, color: Colors.red)),
+  );
 
-  void _showSubscriptionConfirmation() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final medicine = _medicines[_selectedMedicineIndex];
-        final plan = _plans[_selectedPlan]!;
-
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8F5E9),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF4CAF50),
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Confirm Subscription',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${medicine['name']} - ${plan['title']}',
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Amount to pay',
-                      style: TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      '₹${_calculateTotal()}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color(0xFF2196F3),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Subscription activated successfully!'),
-                        backgroundColor: const Color(0xFF4CAF50),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2196F3),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Confirm & Pay',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  void _confirmDelete(BuildContext ctx, MedicineEntity med, MedicineProvider provider) {
+    showDialog(context: ctx, builder: (c) => AlertDialog(
+      title: const Text('Delete Medicine'),
+      content: Text('Remove ' + med.name + ' from inventory?'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+        TextButton(onPressed: () { Navigator.pop(c); provider.deleteMedicine(med.id); },
+            child: const Text('Delete', style: TextStyle(color: Colors.red))),
+      ],
+    ));
   }
 }
