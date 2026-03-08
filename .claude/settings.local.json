@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get)",
+      "Bash(python3 \"C:/Users/LENOVO/AppData/Local/Temp/claude/C--Users-LENOVO-AndroidStudioProjects-nepmed/06a5da75-0b39-4188-a6a7-0b52f8732565/scratchpad/write_nav.py\")",
+      "Bash(python3 \"C:/Users/LENOVO/AppData/Local/Temp/write_home.py\")",
+      "Bash(flutter analyze --no-fatal-infos)",
+      "Bash(flutter build apk --debug)"
+    ]
+  }
+}
